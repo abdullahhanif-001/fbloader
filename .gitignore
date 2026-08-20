@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.cursor/
+
+# Local benchmark outputs
+benchmark_data/
+benchmark_*.json
+benchmark_smoke.json
+benchmark_*.log
+perf_*.json
+tests/mythos_telemetry_report.json
+benchmark_data/mythos/
+HARDCORE_data/
+HARDCORE_*
+.coverage
+htmlcov/
+coverage.xml
+requirements-audit.txt
+requirements-prod.txt

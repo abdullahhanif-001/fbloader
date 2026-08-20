@@ -1,0 +1,36 @@
+name: sonar
+
+# Automatic Analysis (SonarCloud GitHub App) handles push/PR scans.
+# Run this workflow manually only when SONAR_TOKEN is set and you need coverage.xml upload.
+on:
+  workflow_dispatch:
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.12.5"
+
+      - name: Install deps and generate coverage.xml
+        shell: bash
+        run: |
+          uv sync --frozen --no-build --no-binary-package fbload
+          uv pip install --only-binary :all: \
+            "pytest==9.1.1" "pytest-timeout==2.4.0" "pytest-cov==7.1.0"
+          uv pip install --only-binary :all: "torch==2.11.0" --index-url https://download.pytorch.org/whl/cpu
+          uv run --frozen --no-build --no-sync --no-binary-package fbload pytest -q --timeout=120 -m "not slow and not mythos" --cov=fbloader --cov-report=xml:coverage.xml
+
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

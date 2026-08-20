@@ -1,0 +1,2 @@
+#!/bin/sh
+exec py -3 "$(dirname "$0")/strip_agent_attribution.py" commit-msg "$@"

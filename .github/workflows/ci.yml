@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.12.5"
+      - name: Install torch CPU then fbload (locked)
+        shell: bash
+        run: |
+          uv sync --frozen --no-build --no-binary-package fbload
+          uv pip install --only-binary :all: \
+            "pytest==9.1.1" "pytest-timeout==2.4.0" "pytest-cov==7.1.0" \
+            "psutil==7.2.2" "ruff==0.16.3" "bandit==1.9.4"
+          uv pip install --only-binary :all: "torch==2.11.0" --index-url https://download.pytorch.org/whl/cpu
+      - name: Lint
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload ruff check src tests
+      - name: Security scan
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload bandit -r src -ll -q
+      - name: Unit tests with coverage
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload pytest -q --timeout=120 -m "not slow and not mythos" --cov=fbloader --cov-report=term --cov-fail-under=80
+      - name: Slow tests
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload pytest -q --timeout=120 -m "slow and not mythos"
+      - name: Multiprocess workers
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload pytest tests/test_workers_multiprocess.py -q --timeout=120
+      - name: Mythos hardening smoke
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload pytest tests/test_mythos_hardening.py -q --timeout=600 -k smoke
+      - name: Perf regression gate
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: uv run --frozen --no-build --no-sync --no-binary-package fbload python scripts/perf_gate.py

@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fbload"
+version = "0.2.0"
+description = "Cross-platform PyTorch DataLoader wrapper (audit-ready). Sequential tar shards, spawn-safe workers, Mythos stability suite."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Abdullah Hanif" }]
+keywords = ["pytorch", "dataloader", "webdataset", "dali"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "numpy>=1.24",
+  "braceexpand>=0.1.7",
+  "webdataset>=0.2.86",
+  "Pillow>=10.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.coverage.run]
+source = ["src/fbloader"]
+omit = ["src/fbloader/backends/dali.py", "src/fbloader/backends/streaming.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+
+[project.urls]
+Homepage = "https://github.com/abdullahhanif-001/fbloader"
+Repository = "https://github.com/abdullahhanif-001/fbloader"
+Issues = "https://github.com/abdullahhanif-001/fbloader/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fbloader"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/fbloader", "tests", "pyproject.toml", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 120
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+markers = [
+  "slow: longer soak tests",
+  "mythos: full-scale hardening soak (50k steps, manual/nightly)",
+]
