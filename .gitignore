@@ -23,3 +23,9 @@ htmlcov/
 coverage.xml
 requirements-audit.txt
 requirements-prod.txt
+
+# Local interview pack (do not push)
+interview_local/
+*.local.pdf
+INTERVIEW_LOCAL.md
+build_interview_pdf.py

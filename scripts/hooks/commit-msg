@@ -1,0 +1,10 @@
+#!/bin/sh
+# Reject commits that still carry Cursor/agent co-author trailers.
+set -e
+MSG_FILE="$1"
+[ -f "$MSG_FILE" ] || exit 0
+if grep -qiE 'co-authored-by:.*cursor|cursoragent@cursor\.com|Made-with:.*Cursor' "$MSG_FILE"; then
+  echo "Commit blocked: remove agent co-author attribution. Only Abdullah Hanif should appear." >&2
+  exit 1
+fi
+exit 0
